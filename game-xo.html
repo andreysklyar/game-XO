@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="all.css">
+	<script>
+	window.onload = function(){
+		var board = document.querySelector('.board'),
+			cells = board.querySelectorAll('.cell'),
+			resetBtn = document.querySelector('.reset-game'),
+			checkArrey = new Array(8),
+			isCross = true,
+			boardMatrix = [
+				['','',''],
+				['','',''],
+				['','','']
+			],
+			isOver = false;
+
+		//заполняем ячейку
+		function fillCell(e){
+			if (isOver) return;
+			if(hasClass(e.target, 'cell')){
+				if(!hasClass(e.target, 'zero') && !hasClass(e.target, 'cross')){
+					addClass(e.target, isCross ? 'cross' : 'zero');
+					addValueToMatrix(e.target);
+					checkWinner();
+					isCross = !isCross;
+				}
+			}
+		}
+
+		function checkWinner(){
+			if(boardMatrix[0][0] == boardMatrix[0][1] && boardMatrix[0][1] == boardMatrix[0][2]){
+				console.log(boardMatrix[0][0]);
+				console.log('[e asfsaervt234 twq');
+				isOver = true;
+			}
+		}
+
+		//добавить в матрицу значение .cell
+		function addValueToMatrix(elem){
+			var cellNumber = getCellNumber(elem),
+				lineNumber = Math.floor(cellNumber / 3),
+				columnNumber = cellNumber % 3;
+
+			boardMatrix[lineNumber][columnNumber] = isCross ? 'cross' : 'zero';
+			console.table(boardMatrix);
+		}
+
+		//получить порядковый номер .cell 
+		function getCellNumber(elem){
+			for(var i in cells){
+				if (cells[i] == elem){
+					console.log('cell nubmer: ' + i);
+					return i;
+				}
+			}
+		}
+
+		//сброс игры
+		function resetGame(){
+			//удаляем классы с клеток
+			for(var i = 0 ; i < cells.length ; i++){
+				removeClass(cells[i], 'cross');
+				removeClass(cells[i], 'zero');
+			}
+			//чистим матрицу
+			for (var j = 0; j < boardMatrix.length; j++){
+				for (var k = 0; k < boardMatrix[j].length; k++){
+					boardMatrix[j][k] = '';
+				}
+			}
+			isOver = false;
+			isCross = true;
+		}
+
+		//проверка класса
+		function hasClass(elem,myClass){
+			var classes = elem.className.split(" ");
+			return classes.some(function(x){return x === myClass;});
+		}
+
+		//добавление класса
+		function addClass(elem,myClass){
+			var classes = elem.className.split(" ");
+			if (!classes.some(function(x){return x === myClass;})){
+				classes.push(myClass);
+				elem.className=classes.join(' ');
+			}
+		}
+
+		//удаление класса
+		function removeClass(elem,myClass){
+			var classes = elem.className.split(" ");
+			for(i=0;i<classes.length;i++){
+				while (classes[i]===myClass){
+					classes.splice(i,1);
+				}
+			}
+			elem.className = classes.join(' ');
+		}
+
+		board.addEventListener('click', function(e){
+			fillCell(e);
+		});
+
+		resetBtn.addEventListener('click', function(){
+			resetGame();
+		});
+	};
+	</script>
+</head>
+<body>
+	<h2>Крестики-нолики</h2>
+	<div class="board">
+		<div class="cell zero"></div>
+		<div class="cell cross"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
+	</div>
+	<div>
+		<button class="reset-game">заново</button>
+	</div>
+	<!-- 
+//добавление класса
+		function addClass(elem,myClass){
+			var classes = elem.className.split(" ");
+			if (!classes.some(function(x){return x==myClass})){
+				classes.push(myClass);
+				elem.className=classes.join(' ');
+			}
+		}
+		//удаление класса
+		function removeClass(elem,myClass){
+			var classes = elem.className.split(" ");
+			for(i=0;i<classes.length;i++){
+				while (classes[i]==myClass){
+					classes.splice(i,1);
+				}
+			}
+			elem.className = classes.join(' ');
+		}
+	 -->
+</body>
+</html>

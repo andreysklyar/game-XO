@@ -2,26 +2,32 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>Document</title>
+	<title>XO</title>
 	<link rel="stylesheet" href="all.css">
 	<script>
 	window.onload = function(){
 		var board = document.querySelector('.board'),
 			cells = board.querySelectorAll('.cell'),
 			resetBtn = document.querySelector('.reset-game'),
-			checkArrey = new Array(8),
 			isCross = true,
+			selectedArrey = new Array(9),
 			boardMatrix = [
 				['','',''],
 				['','',''],
 				['','','']
 			],
-			isOver = false;
+			isOver = false,
+			cellNumber,
+			line,
+			column;
 
 		//заполняем ячейку
-		function fillCell(e){
+		function fillCell(e, aiCell){
 			if (isOver) return;
-			if(hasClass(e.target, 'cell')){
+			//проверяем на ход компьютера
+			if(!e) isAiStep = true;
+			//TODO сделать универсальную функцию
+			if(hasClass(e.target, 'cell') || isAiStep){
 				if(!hasClass(e.target, 'zero') && !hasClass(e.target, 'cross')){
 					addClass(e.target, isCross ? 'cross' : 'zero');
 					addValueToMatrix(e.target);
@@ -31,20 +37,103 @@
 			}
 		}
 
+		//проверить победителя
 		function checkWinner(){
-			//TODO доделать проверку выигрыша
-			if(){
-				//isOver = true;
+			var line2,line3,column2,column3,delta;
+			
+			switch (line) {
+				case 0: line2 = 1;line3 = 2;delta = 0;
+					break;
+				case 1: line2 = 0;line3 = 2;delta = 3;
+					break;
+			 	case 2: line2 = 0;line3 = 1;delta = 6;
+					break;
 			}
+
+			switch (column) {
+				case 0: column2 = 1;column3 = 2;
+					break;
+				case 1: column2 = 0;column3 = 2;
+					break;
+			 	case 2: column2 = 0;column3 = 1;
+					break;
+			}
+
+			//проверить вертикаль
+			if(boardMatrix[line][column] == boardMatrix[line2][column] && 
+				boardMatrix[line][column] == boardMatrix[line3][column]){
+				isOver = true;
+				console.log('over v');
+				//красим
+				addClass(cells[column],'red');
+				addClass(cells[column + 3],'red');
+				addClass(cells[column + 6],'red');
+			}
+			//проверить горизонталь
+			if(boardMatrix[line][column] == boardMatrix[line][column2] && 
+				boardMatrix[line][column] == boardMatrix[line][column3]){
+				isOver = true;
+				console.log('over g');
+				//красим
+				addClass(cells[delta],'red');
+				addClass(cells[delta + 1],'red');
+				addClass(cells[delta + 2],'red');
+
+			}
+			//проверить диагональ 1
+			if(boardMatrix[1][1] == boardMatrix[0][0] && 
+				boardMatrix[1][1] == boardMatrix[2][2] &&
+				boardMatrix[1][1] !== ""){
+				isOver = true;
+				console.log('over d1');
+				//красим
+				addClass(cells[0],'red');
+				addClass(cells[4],'red');
+				addClass(cells[8],'red');
+
+			}
+			//проверить диагональ 2
+			if(boardMatrix[1][1] == boardMatrix[0][2] && 
+				boardMatrix[1][1] == boardMatrix[2][0] &&
+				boardMatrix[1][1] !== ""){
+				isOver = true;
+				console.log('over d2');
+				//красим
+				addClass(cells[2],'red');
+				addClass(cells[4],'red');
+				addClass(cells[6],'red');
+
+			}
+
+		}
+
+		//ход ИИ
+		function aiStep(){
+			var randomCell = Math.floor(Math.random()*9),
+				aiLine = Math.floor(randomCell / 3),
+				aiColumn = randomCell % 3;
+
+			//TODO сделать рандомный ход
+			//проверть заполнена ли ячейка
+			if(!selectedArrey[randomCell]){
+				/*selectedArrey[randomCell] = true;
+				boardMatrix[aiLine][aiColumn] = isCross ? 'cross' : 'zero';*/
+				fillCell(null, randomCell);
+			} else{
+
+				//selectedArrey[randomCell] = true;
+			}
+
 		}
 
 		//добавить в матрицу значение .cell
 		function addValueToMatrix(elem){
-			var cellNumber = getCellNumber(elem),
-				lineNumber = Math.floor(cellNumber / 3),
-				columnNumber = cellNumber % 3;
+			cellNumber = getCellNumber(elem);
+			line = Math.floor(cellNumber / 3);
+			column = cellNumber % 3;
 
-			boardMatrix[lineNumber][columnNumber] = isCross ? 'cross' : 'zero';
+			boardMatrix[line][column] = isCross ? 'cross' : 'zero';
+			selectedArrey[cellNumber] = true;
 			console.table(boardMatrix);
 		}
 
@@ -64,6 +153,7 @@
 			for(var i = 0 ; i < cells.length ; i++){
 				removeClass(cells[i], 'cross');
 				removeClass(cells[i], 'zero');
+				removeClass(cells[i], 'red');
 			}
 			//чистим матрицу
 			for (var j = 0; j < boardMatrix.length; j++){
@@ -73,6 +163,8 @@
 			}
 			isOver = false;
 			isCross = true;
+			//новый массив для занятых ячеек
+			selectedArrey = new Array(9);
 		}
 
 		//проверка класса
@@ -113,9 +205,13 @@
 </head>
 <body>
 	<h2>Крестики-нолики</h2>
+	<div class="nav">
+		<label><input type="radio" name="opponent" checked="checked"> 2  игрока </label>
+		<label><input type="radio" name="opponent"> с компьютером </label>
+	</div>
 	<div class="board">
-		<div class="cell zero"></div>
-		<div class="cell cross"></div>
+		<div class="cell"></div>
+		<div class="cell"></div>
 		<div class="cell"></div>
 		<div class="cell"></div>
 		<div class="cell"></div>
@@ -127,25 +223,5 @@
 	<div>
 		<button class="reset-game">заново</button>
 	</div>
-	<!-- 
-//добавление класса
-		function addClass(elem,myClass){
-			var classes = elem.className.split(" ");
-			if (!classes.some(function(x){return x==myClass})){
-				classes.push(myClass);
-				elem.className=classes.join(' ');
-			}
-		}
-		//удаление класса
-		function removeClass(elem,myClass){
-			var classes = elem.className.split(" ");
-			for(i=0;i<classes.length;i++){
-				while (classes[i]==myClass){
-					classes.splice(i,1);
-				}
-			}
-			elem.className = classes.join(' ');
-		}
-	 -->
 </body>
 </html>

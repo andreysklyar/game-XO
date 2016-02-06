@@ -61,3 +61,17 @@ body{
 	transform-origin:100% 1px;
 }
 button{padding: 5px 10px;}
+.red.zero:after{
+	border-color: red;
+}
+.red.cross:after,
+.red.cross:before{
+	background: red;
+}
+.nav{
+	max-width: 400px;
+	margin: 0 auto 20px;
+}
+.row label{
+	margin: 0 30px;
+}

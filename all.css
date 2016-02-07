@@ -6,9 +6,23 @@ body{
 }
 .board{
 	width:184px;
-	border-right:1px solid #ccc;
-	border-bottom:1px solid #ccc;
+	border-right:1px solid #9e9e9e;
+	border-bottom:1px solid #9e9e9e;
 	margin:0 auto 30px;
+	position:relative;
+	z-index:2;
+}
+.board:before{
+	position:absolute;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	content:'';
+	background:#fef2c8 url(bg-board.jpg) 0 0 no-repeat;
+	background-size:cover;
+	opacity: 0.5;
+	pointer-events:none;
 }
 .board:after{
 	content:"";
@@ -19,8 +33,8 @@ body{
 	float:left;
 	width:61px;
 	height:61px;
-	border-top:1px solid #ccc;
-	border-left:1px solid #ccc;
+	border-top:1px solid #9e9e9e;
+	border-left:1px solid #9e9e9e;
 	position:relative;
 }
 .zero:after{
@@ -30,7 +44,7 @@ body{
 	left:50%;
 	width:40px;
 	height:40px;
-	border:2px solid #000;
+	border:2px solid #424242;
 	border-radius:50%;
 	margin: -22px 0 0 -22px;
 }
@@ -41,7 +55,7 @@ body{
 	left:10px;
 	width:56px;
 	height:2px;
-	background:#000;
+	background:#424242;
 	-webkit-transform:rotate(45deg);
 	transform:rotate(45deg);
 	-webkit-ttransform-origin:0 1px;
@@ -54,7 +68,7 @@ body{
 	right:10px;
 	width:56px;
 	height:2px;
-	background:#000;
+	background:#424242;
 	-webkit-transform:rotate(-45deg);
 	transform:rotate(-45deg);
 	-webkit-ttransform-origin:100% 1px;
@@ -62,11 +76,11 @@ body{
 }
 button{padding: 5px 10px;}
 .red.zero:after{
-	border-color: red;
+	border-color: #ef5350;
 }
 .red.cross:after,
 .red.cross:before{
-	background: red;
+	background: #ef5350;
 }
 .nav{
 	max-width: 400px;

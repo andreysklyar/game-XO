@@ -75,3 +75,26 @@ button{padding: 5px 10px;}
 .row label{
 	margin: 0 30px;
 }
+.wrapper{
+	max-width:600px;
+	margin:0 auto 20px;
+}
+.wrapper:after{
+	content:"";
+	clear:both;
+	display:block;
+}
+.wrapper .right-col{
+	float:right;
+	width:150px;
+	margin: 0 0 0 10px
+}
+.winners{
+	text-align:left;
+	width:100%;
+	border-collapse:collapse;
+}
+.winners td{
+	border:1px solid #ccc;
+	padding:3px;
+}

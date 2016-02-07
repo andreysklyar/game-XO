@@ -9,6 +9,11 @@
 		var board = document.querySelector('.board'),
 			cells = board.querySelectorAll('.cell'),
 			resetBtn = document.querySelector('.reset-game'),
+			radios = document.querySelectorAll('.nav input[type="radio"]'),
+			table = document.querySelector('.winners'),
+			player1Node = document.querySelector('.count-player1'),
+			player2Node = document.querySelector('.count-player2'),
+			computerNode = document.querySelector('.count-computer'),
 			isCross = true,
 			selectedArrey = new Array(9),
 			boardMatrix = [
@@ -17,22 +22,51 @@
 				['','','']
 			],
 			isOver = false,
+			counter = 0,
 			cellNumber,
 			line,
-			column;
+			column,
+			isOnePlayer = false;
+
+		//узнать количество игроков
+		function checkPlayers(){
+			var noneIsSelected = true;
+
+			for (var i = 0; i < radios.length; i++){
+				if(radios[i].checked){
+					(radios[i].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
+					noneIsSelected = false;
+				}
+
+				//если ничего не выбрано
+				if(i == radios.length -1 && noneIsSelected){
+					console.log('last');
+					radios[0].checked = true;
+					(radios[0].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
+				}
+
+				radios[i].addEventListener('change', function(){
+					isOnePlayer = !isOnePlayer;
+					resetGame();
+				});
+			}
+		}
+		checkPlayers();
 
 		//заполняем ячейку
-		function fillCell(e, aiCell){
-			if (isOver) return;
-			//проверяем на ход компьютера
-			if(!e) isAiStep = true;
-			//TODO сделать универсальную функцию
-			if(hasClass(e.target, 'cell') || isAiStep){
-				if(!hasClass(e.target, 'zero') && !hasClass(e.target, 'cross')){
-					addClass(e.target, isCross ? 'cross' : 'zero');
-					addValueToMatrix(e.target);
-					checkWinner();
-					isCross = !isCross;
+		function fillCell(e){
+			if (isOver || !hasClass(e.target, 'cell')) return;
+
+			if(!hasClass(e.target, 'zero') && !hasClass(e.target, 'cross')){
+				addClass(e.target, isCross ? 'cross' : 'zero');
+				addValueToMatrix(e.target);
+				checkWinner();
+				isCross = !isCross;
+				counter ++;
+
+				//ход компьютера
+				if(counter < 9 && isOnePlayer){
+					aiStep();
 				}
 			}
 		}
@@ -68,7 +102,10 @@
 				addClass(cells[column],'red');
 				addClass(cells[column + 3],'red');
 				addClass(cells[column + 6],'red');
+				saveGameResult(boardMatrix[line][column]);
+				return;
 			}
+
 			//проверить горизонталь
 			if(boardMatrix[line][column] == boardMatrix[line][column2] && 
 				boardMatrix[line][column] == boardMatrix[line][column3]){
@@ -78,8 +115,10 @@
 				addClass(cells[delta],'red');
 				addClass(cells[delta + 1],'red');
 				addClass(cells[delta + 2],'red');
-
+				saveGameResult(boardMatrix[line][column]);
+				return;
 			}
+
 			//проверить диагональ 1
 			if(boardMatrix[1][1] == boardMatrix[0][0] && 
 				boardMatrix[1][1] == boardMatrix[2][2] &&
@@ -90,8 +129,10 @@
 				addClass(cells[0],'red');
 				addClass(cells[4],'red');
 				addClass(cells[8],'red');
-
+				saveGameResult(boardMatrix[1][1]);
+				return;
 			}
+
 			//проверить диагональ 2
 			if(boardMatrix[1][1] == boardMatrix[0][2] && 
 				boardMatrix[1][1] == boardMatrix[2][0] &&
@@ -102,49 +143,76 @@
 				addClass(cells[2],'red');
 				addClass(cells[4],'red');
 				addClass(cells[6],'red');
-
+				saveGameResult(boardMatrix[1][1]);
+				return;
 			}
+		}
 
+		function saveGameResult(winner){
+			if(winner == "cross"){
+				player1Node.innerHTML = parseFloat(player1Node.innerHTML) + 1;
+			} else if(isOnePlayer){
+				computerNode.innerHTML = parseFloat(computerNode.innerHTML) + 1;
+			} else {
+				player2Node.innerHTML = parseFloat(player2Node.innerHTML) + 1;
+			}
 		}
 
 		//ход ИИ
 		function aiStep(){
-			var randomCell = Math.floor(Math.random()*9),
-				aiLine = Math.floor(randomCell / 3),
-				aiColumn = randomCell % 3;
+			if (isOver) return;
 
-			//TODO сделать рандомный ход
+			var randomCell = Math.floor(Math.random()*9);
+			
+			recalсPosition(randomCell);
+
 			//проверть заполнена ли ячейка
 			if(!selectedArrey[randomCell]){
-				/*selectedArrey[randomCell] = true;
-				boardMatrix[aiLine][aiColumn] = isCross ? 'cross' : 'zero';*/
-				fillCell(null, randomCell);
-			} else{
+				aiFillCell();
+			} else {
+				//если заполнена ищем следующую пустую
+				do{
+					if(randomCell === 8) randomCell = -1;
+					randomCell ++;
+				} while(selectedArrey[randomCell]);
 
-				//selectedArrey[randomCell] = true;
+				aiFillCell();
 			}
 
+			//TODO найти ошибку
+			function aiFillCell(){
+				recalсPosition(randomCell);
+				addClass(cells[randomCell], isCross ? 'cross' : 'zero');
+				boardMatrix[line][column] = isCross ? 'cross' : 'zero';
+				selectedArrey[randomCell] = true;
+				isCross = !isCross;
+				checkWinner();
+				counter ++;
+			}
 		}
 
 		//добавить в матрицу значение .cell
 		function addValueToMatrix(elem){
 			cellNumber = getCellNumber(elem);
-			line = Math.floor(cellNumber / 3);
-			column = cellNumber % 3;
+			recalсPosition(cellNumber);
 
 			boardMatrix[line][column] = isCross ? 'cross' : 'zero';
 			selectedArrey[cellNumber] = true;
-			console.table(boardMatrix);
 		}
 
-		//получить порядковый номер .cell 
+		//получить порядковый номер .cell в массиве
 		function getCellNumber(elem){
 			for(var i in cells){
 				if (cells[i] == elem){
-					console.log('cell nubmer: ' + i);
 					return i;
 				}
 			}
+		}
+
+		//пересчет позиции ячейки
+		function recalсPosition(cell){
+			line = Math.floor(cell / 3);
+			column = cell % 3;
 		}
 
 		//сброс игры
@@ -163,6 +231,7 @@
 			}
 			isOver = false;
 			isCross = true;
+			counter = 0;
 			//новый массив для занятых ячеек
 			selectedArrey = new Array(9);
 		}
@@ -186,7 +255,7 @@
 		function removeClass(elem,myClass){
 			var classes = elem.className.split(" ");
 			for(i=0;i<classes.length;i++){
-				while (classes[i]===myClass){
+				while (classes[i] === myClass){
 					classes.splice(i,1);
 				}
 			}
@@ -200,25 +269,44 @@
 		resetBtn.addEventListener('click', function(){
 			resetGame();
 		});
+
 	};
 	</script>
 </head>
 <body>
 	<h2>Крестики-нолики</h2>
 	<div class="nav">
-		<label><input type="radio" name="opponent" checked="checked"> 2  игрока </label>
-		<label><input type="radio" name="opponent"> с компьютером </label>
+		<label><input type="radio" name="opponent" value="2players" > 2  игрока </label>
+		<label><input type="radio" name="opponent" value="1player"> с компьютером </label>
 	</div>
-	<div class="board">
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
-		<div class="cell"></div>
+	<div class="wrapper">
+		<div class="right-col">
+			<table class="winners">
+				<tr>
+					<td>Игрок 1 (x)</td>
+					<td><span class="count-player1">0</span></td>
+				</tr>
+				<tr>
+					<td>Игрок 2 (o)</td>
+					<td><span class="count-player2">0</span></td>
+				</tr>
+				<tr>
+					<td>Компьютер (o)</td>
+					<td><span class="count-computer">0</span></td>
+				</tr>
+			</table>
+		</div>
+		<div class="board">
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+			<div class="cell"></div>
+		</div>
 	</div>
 	<div>
 		<button class="reset-game">заново</button>

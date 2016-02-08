@@ -5,6 +5,11 @@
 	<title>XO</title>
 	<link rel="stylesheet" href="all.css">
 	<script>
+	// [Subota]
+	// TODO: Переписать выделив функцию инициализации поля и обработчиков на элементах управления
+	// TODO: Сделать динамическое построение игрового поля
+	// TODO: Переписать логику игры используя понятие игрового цикла (game loop)
+	// TODO: Оптимизировать алгоритмы определения победителя, заполнения поля, хранения очков игры
 	window.onload = function(){
 		var board = document.querySelector('.board'),
 			cells = board.querySelectorAll('.cell'),
@@ -34,6 +39,10 @@
 
 			for (var i = 0; i < radios.length; i++){
 				if(radios[i].checked){
+					// [Subota] Старайся не использовать тернарный оператор как if ... else ...
+					// Он в первую очередь оператор, а не блок сравнения.
+					// И эту конструкцию можно записать еще более изящнее:
+					// isOnePlayer = radios[i].value !== "2players"
 					(radios[i].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
 					noneIsSelected = false;
 				}
@@ -45,6 +54,7 @@
 					(radios[0].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
 				}
 
+				// [Subota] Как насчет делегирования? Тогда нужен будет один обработчик вместо нескольких (на каждый radio)
 				radios[i].addEventListener('change', function(){
 					isOnePlayer = !isOnePlayer;
 					resetGame();
@@ -62,7 +72,7 @@
 				addValueToMatrix(e.target);
 				checkWinner();
 				isCross = !isCross;
-				counter ++;
+				counter++;
 
 				//ход компьютера
 				if(counter < 9 && isOnePlayer){
@@ -74,7 +84,8 @@
 		//проверить победителя
 		function checkWinner(){
 			var line2,line3,column2,column3,delta;
-			
+			// [Subota] А если бы поле было больше чем 3 на 3? :)
+			// TODO: переписать функцию checkWinner() для уменьшения обьемов повторяемого кода
 			switch (line) {
 				case 0: line2 = 1;line3 = 2;delta = 0;
 					break;
@@ -94,7 +105,7 @@
 			}
 
 			//проверить вертикаль
-			if(boardMatrix[line][column] == boardMatrix[line2][column] && 
+			if(boardMatrix[line][column] == boardMatrix[line2][column] &&
 				boardMatrix[line][column] == boardMatrix[line3][column]){
 				isOver = true;
 				console.log('over v');
@@ -107,7 +118,7 @@
 			}
 
 			//проверить горизонталь
-			if(boardMatrix[line][column] == boardMatrix[line][column2] && 
+			if(boardMatrix[line][column] == boardMatrix[line][column2] &&
 				boardMatrix[line][column] == boardMatrix[line][column3]){
 				isOver = true;
 				console.log('over g');
@@ -120,7 +131,7 @@
 			}
 
 			//проверить диагональ 1
-			if(boardMatrix[1][1] == boardMatrix[0][0] && 
+			if(boardMatrix[1][1] == boardMatrix[0][0] &&
 				boardMatrix[1][1] == boardMatrix[2][2] &&
 				boardMatrix[1][1] !== ""){
 				isOver = true;
@@ -134,7 +145,7 @@
 			}
 
 			//проверить диагональ 2
-			if(boardMatrix[1][1] == boardMatrix[0][2] && 
+			if(boardMatrix[1][1] == boardMatrix[0][2] &&
 				boardMatrix[1][1] == boardMatrix[2][0] &&
 				boardMatrix[1][1] !== ""){
 				isOver = true;
@@ -163,7 +174,7 @@
 			if (isOver) return;
 
 			var randomCell = Math.floor(Math.random()*9);
-			
+
 			recalсPosition(randomCell);
 
 			//проверть заполнена ли ячейка
@@ -275,7 +286,7 @@
 <body>
 	<h2>Крестики-нолики</h2>
 	<div class="nav">
-		<label><input type="radio" name="opponent" value="2players" > 2  игрока </label>
+		<label><input type="radio" name="opponent" value="2players"> 2  игрока </label>
 		<label><input type="radio" name="opponent" value="1player"> с компьютером </label>
 	</div>
 	<div class="wrapper">

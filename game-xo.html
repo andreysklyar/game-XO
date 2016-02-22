@@ -5,6 +5,11 @@
 	<title>XO</title>
 	<link rel="stylesheet" href="all.css">
 	<script>
+	// [Subota]
+	// TODO: Переписать выделив функцию инициализации поля и обработчиков на элементах управления
+	// TODO: Сделать динамическое построение игрового поля
+	// TODO: Переписать логику игры используя понятие игрового цикла (game loop)
+	// TODO: Оптимизировать алгоритмы определения победителя, заполнения поля, хранения очков игры
 	window.onload = function(){
 		var board = document.querySelector('.board'),
 			cells = board.querySelectorAll('.cell'),
@@ -26,25 +31,42 @@
 			cellNumber,
 			line,
 			column,
-			isOnePlayer = false;
+			isOnePlayer = false,
+			filledArray = new Array(9),//массив для выбранных ячеек
+			sq = 3;//размер поля 3*3;
+
+		//todo доделать динамическое создание поля
+		function createField(number){
+			sq = number;
+
+			var field = document.createElement('div');
+			field.className = 'board';
+
+			for(var i = 0; i < sq*sq ; i ++){
+				var cell = document.createElement('div');
+				cell.className = 'cell';
+				field.appendChild(cell);
+			}
+
+			document.querySelector('.wrapper').appendChild(field);
+		}
+		createField(3);
+		//todo добавить обработчики на созданное поле
 
 		//узнать количество игроков
 		function checkPlayers(){
 			var noneIsSelected = true;
-
 			for (var i = 0; i < radios.length; i++){
 				if(radios[i].checked){
-					(radios[i].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
+					isOnePlayer = radios[i].value !== "2players";
 					noneIsSelected = false;
 				}
-
 				//если ничего не выбрано
 				if(i == radios.length -1 && noneIsSelected){
-					console.log('last');
 					radios[0].checked = true;
-					(radios[0].value === "2players") ? isOnePlayer = false : isOnePlayer = true;
+					isOnePlayer = radios[0].value !== "2players";
 				}
-
+				// [Subota] Как насчет делегирования? Тогда нужен будет один обработчик вместо нескольких (на каждый radio)
 				radios[i].addEventListener('change', function(){
 					isOnePlayer = !isOnePlayer;
 					resetGame();
@@ -52,102 +74,47 @@
 			}
 		}
 		checkPlayers();
-
 		//заполняем ячейку
 		function fillCell(e){
 			if (isOver || !hasClass(e.target, 'cell')) return;
-
 			if(!hasClass(e.target, 'zero') && !hasClass(e.target, 'cross')){
 				addClass(e.target, isCross ? 'cross' : 'zero');
 				addValueToMatrix(e.target);
-				checkWinner();
+				cellNumber = +getCellNumber(e.target);//номер ячейки
+				checkWinner(cellNumber);
 				isCross = !isCross;
-				counter ++;
-
+				counter++;
 				//ход компьютера
 				if(counter < 9 && isOnePlayer){
 					aiStep();
 				}
 			}
 		}
-
 		//проверить победителя
-		function checkWinner(){
-			var line2,line3,column2,column3,delta;
-			
-			switch (line) {
-				case 0: line2 = 1;line3 = 2;delta = 0;
-					break;
-				case 1: line2 = 0;line3 = 2;delta = 3;
-					break;
-			 	case 2: line2 = 0;line3 = 1;delta = 6;
-					break;
-			}
-
-			switch (column) {
-				case 0: column2 = 1;column3 = 2;
-					break;
-				case 1: column2 = 0;column3 = 2;
-					break;
-			 	case 2: column2 = 0;column3 = 1;
-					break;
-			}
-
-			//проверить вертикаль
-			if(boardMatrix[line][column] == boardMatrix[line2][column] && 
-				boardMatrix[line][column] == boardMatrix[line3][column]){
-				isOver = true;
-				console.log('over v');
-				//красим
-				addClass(cells[column],'red');
-				addClass(cells[column + 3],'red');
-				addClass(cells[column + 6],'red');
-				saveGameResult(boardMatrix[line][column]);
+		function checkWinner(number){
+			//если ячейка уже заполнена выйти
+			if(filledArray[number] == -1 || filledArray[number] == 1) {
 				return;
+			} else {
+				filledArray[number] = isCross ? -1 : 1;
 			}
 
-			//проверить горизонталь
-			if(boardMatrix[line][column] == boardMatrix[line][column2] && 
-				boardMatrix[line][column] == boardMatrix[line][column3]){
+			//проверяем вертикаль
+			if(filledArray[number] == filledArray[number - sq*2] && filledArray[number] == filledArray[number - sq]){
 				isOver = true;
-				console.log('over g');
-				//красим
-				addClass(cells[delta],'red');
-				addClass(cells[delta + 1],'red');
-				addClass(cells[delta + 2],'red');
-				saveGameResult(boardMatrix[line][column]);
-				return;
+				console.log('end vertical up');
 			}
-
-			//проверить диагональ 1
-			if(boardMatrix[1][1] == boardMatrix[0][0] && 
-				boardMatrix[1][1] == boardMatrix[2][2] &&
-				boardMatrix[1][1] !== ""){
+			if(filledArray[number] == filledArray[number - sq] && filledArray[number] == filledArray[number + sq]){
 				isOver = true;
-				console.log('over d1');
-				//красим
-				addClass(cells[0],'red');
-				addClass(cells[4],'red');
-				addClass(cells[8],'red');
-				saveGameResult(boardMatrix[1][1]);
-				return;
+				console.log('end vertical center');
 			}
-
-			//проверить диагональ 2
-			if(boardMatrix[1][1] == boardMatrix[0][2] && 
-				boardMatrix[1][1] == boardMatrix[2][0] &&
-				boardMatrix[1][1] !== ""){
+			if(filledArray[number] == filledArray[number + sq] && filledArray[number] == filledArray[number + 2*sq]){
 				isOver = true;
-				console.log('over d2');
-				//красим
-				addClass(cells[2],'red');
-				addClass(cells[4],'red');
-				addClass(cells[6],'red');
-				saveGameResult(boardMatrix[1][1]);
-				return;
+				console.log('end vertical down');
 			}
+			//todo проверяем горизонталь
+			//todo проверяем диагональ
 		}
-
 		function saveGameResult(winner){
 			if(winner == "cross"){
 				player1Node.innerHTML = parseFloat(player1Node.innerHTML) + 1;
@@ -157,15 +124,11 @@
 				player2Node.innerHTML = parseFloat(player2Node.innerHTML) + 1;
 			}
 		}
-
 		//ход ИИ
 		function aiStep(){
 			if (isOver) return;
-
 			var randomCell = Math.floor(Math.random()*9);
-			
 			recalсPosition(randomCell);
-
 			//проверть заполнена ли ячейка
 			if(!selectedArrey[randomCell]){
 				aiFillCell();
@@ -175,30 +138,25 @@
 					if(randomCell === 8) randomCell = -1;
 					randomCell ++;
 				} while(selectedArrey[randomCell]);
-
 				aiFillCell();
 			}
-
 			function aiFillCell(){
 				recalсPosition(randomCell);
 				addClass(cells[randomCell], isCross ? 'cross' : 'zero');
 				boardMatrix[line][column] = isCross ? 'cross' : 'zero';
 				selectedArrey[randomCell] = true;
+				checkWinner(randomCell);
 				isCross = !isCross;
-				checkWinner();
 				counter ++;
 			}
 		}
-
 		//добавить в матрицу значение .cell
 		function addValueToMatrix(elem){
 			cellNumber = getCellNumber(elem);
 			recalсPosition(cellNumber);
-
 			boardMatrix[line][column] = isCross ? 'cross' : 'zero';
 			selectedArrey[cellNumber] = true;
 		}
-
 		//получить порядковый номер .cell в массиве
 		function getCellNumber(elem){
 			for(var i in cells){
@@ -207,13 +165,11 @@
 				}
 			}
 		}
-
 		//пересчет позиции ячейки
 		function recalсPosition(cell){
 			line = Math.floor(cell / 3);
 			column = cell % 3;
 		}
-
 		//сброс игры
 		function resetGame(){
 			//удаляем классы с клеток
@@ -233,14 +189,13 @@
 			counter = 0;
 			//новый массив для занятых ячеек
 			selectedArrey = new Array(9);
+			filledArray = new Array(9);
 		}
-
 		//проверка класса
 		function hasClass(elem,myClass){
 			var classes = elem.className.split(" ");
 			return classes.some(function(x){return x === myClass;});
 		}
-
 		//добавление класса
 		function addClass(elem,myClass){
 			var classes = elem.className.split(" ");
@@ -249,7 +204,6 @@
 				elem.className=classes.join(' ');
 			}
 		}
-
 		//удаление класса
 		function removeClass(elem,myClass){
 			var classes = elem.className.split(" ");
@@ -260,22 +214,19 @@
 			}
 			elem.className = classes.join(' ');
 		}
-
 		board.addEventListener('click', function(e){
 			fillCell(e);
 		});
-
 		resetBtn.addEventListener('click', function(){
 			resetGame();
 		});
-
 	};
 	</script>
 </head>
 <body>
 	<h2>Крестики-нолики</h2>
 	<div class="nav">
-		<label><input type="radio" name="opponent" value="2players" > 2  игрока </label>
+		<label><input type="radio" name="opponent" value="2players"> 2  игрока </label>
 		<label><input type="radio" name="opponent" value="1player"> с компьютером </label>
 	</div>
 	<div class="wrapper">
